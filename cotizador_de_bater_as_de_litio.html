@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cotizador de Baterías de Litio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen py-8 px-4 flex justify-center items-center">
+
+  <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
+    
+    <!-- Encabezado -->
+    <div class="text-center border-b border-slate-800 pb-5">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+        Cotizador de Baterías de Litio
+      </h1>
+      <p class="text-slate-400 text-sm mt-1">Calculadora de armado, costos internos y precio de venta</p>
+    </div>
+
+    <!-- 1. Tipo de Celda -->
+    <div class="space-y-2">
+      <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">1. Formato de Celda</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label class="relative flex flex-col p-4 bg-slate-800/60 border-2 border-slate-700 rounded-xl cursor-pointer hover:border-cyan-500 transition-all has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-950/20">
+          <input type="radio" name="celda" value="21700" checked class="peer sr-only" onchange="actualizarCelda()">
+          <span class="font-bold text-lg text-white">21700 (4.0 Ah)</span>
+          <span class="text-xs text-slate-400 mt-1">Venta: $92 | Costo: $45</span>
+        </label>
+
+        <label class="relative flex flex-col p-4 bg-slate-800/60 border-2 border-slate-700 rounded-xl cursor-pointer hover:border-cyan-500 transition-all has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-950/20">
+          <input type="radio" name="celda" value="18650" class="peer sr-only" onchange="actualizarCelda()">
+          <span class="font-bold text-lg text-white">18650 (2.5 Ah)</span>
+          <span class="text-xs text-slate-400 mt-1">Venta: $70 | Costo: $25</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. Voltaje (Serie S) -->
+    <div class="space-y-2">
+      <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">2. Voltaje del Pack</label>
+      <div class="grid grid-cols-3 gap-3">
+        <button type="button" onclick="setVoltaje(10, '36V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-cyan-500/10 border-cyan-400 text-cyan-300">
+          36V <span class="block text-xs font-normal text-slate-400">10S</span>
+        </button>
+        <button type="button" onclick="setVoltaje(13, '48V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500">
+          48V <span class="block text-xs font-normal text-slate-400">13S</span>
+        </button>
+        <button type="button" onclick="setVoltaje(20, '72V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500">
+          72V <span class="block text-xs font-normal text-slate-400">20S</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Capacidad Ah (Paralelos P) -->
+    <div class="space-y-2">
+      <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase" id="label-ah">
+        3. Capacidad (Múltiplos de 4.0 Ah)
+      </label>
+      
+      <!-- Botones predefinidos 2P, 3P, 4P -->
+      <div class="grid grid-cols-3 gap-3" id="botones-ah">
+        <!-- Generados dinamicamente via JS -->
+      </div>
+
+      <!-- Ingreso manual -->
+      <div class="pt-2">
+        <div class="flex items-center gap-2">
+          <input type="number" step="any" id="input-manual-ah" placeholder="O escribe los Ah manualmente" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-400 transition-all"
+                 oninput="handleManualAh(this.value)">
+        </div>
+        <p id="error-msg" class="text-xs text-rose-400 mt-1 hidden"></p>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-4">
+      
+      <!-- Ficha de armado -->
+      <div class="flex flex-wrap items-center justify-between text-xs sm:text-sm text-slate-400 border-b border-slate-800/80 pb-3 gap-2">
+        <div>Pack: <span id="res-pack" class="font-semibold text-white">36V 8.0Ah</span></div>
+        <div>Configuración: <span id="res-config" class="font-semibold text-white">10S 2P</span></div>
+        <div>Total celdas: <span id="res-celdas" class="font-semibold text-cyan-400">20 pzas</span></div>
+      </div>
+
+      <!-- Desglose 1, 2 y 3 -->
+      <div class="space-y-3">
+        <!-- 1. Precio al cliente -->
+        <div class="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block">1. Precio Total al Cliente</span>
+            <span id="sub-cliente" class="text-xs text-slate-400 block mt-0.5">Celdas: $1,840 + BMS: $696</span>
+          </div>
+          <div id="val-cliente" class="text-2xl font-black text-emerald-400">$2,536</div>
+        </div>
+
+        <!-- 2. Costo interno -->
+        <div class="p-4 bg-rose-950/20 border border-rose-500/30 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-rose-400 uppercase tracking-wider block">2. Costo Total para Nosotros</span>
+            <span id="sub-costo" class="text-xs text-slate-400 block mt-0.5">Celdas: $900 + BMS: $300</span>
+          </div>
+          <div id="val-costo" class="text-xl font-bold text-rose-300">$1,200</div>
+        </div>
+
+        <!-- 3. Beneficio -->
+        <div class="p-4 bg-amber-950/20 border border-amber-500/30 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">3. Beneficio Estimado</span>
+            <span id="val-margen" class="text-xs text-amber-300/80 block mt-0.5">Margen sobre venta: 52.7%</span>
+          </div>
+          <div id="val-ganancia" class="text-2xl font-black text-amber-400">$1,336</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Variables base
+    const PRECIOS = {
+      "21700": { venta: 92, costo: 45, baseAh: 4.0 },
+      "18650": { venta: 70, costo: 25, baseAh: 2.5 }
+    };
+
+    const BMS = { venta: 696, costo: 300 };
+
+    let estado = {
+      tipo: "21700",
+      serie: 10,
+      voltajeNominal: "36V",
+      paralelo: 2,
+      ah: 8.0,
+      esManual: false
+    };
+
+    function actualizarCelda() {
+      const selected = document.querySelector('input[name="celda"]:checked').value;
+      estado.tipo = selected;
+      document.getElementById('input-manual-ah').value = '';
+      estado.esManual = false;
+      renderizarBotonesAh();
+      seleccionarP(2);
+    }
+
+    function setVoltaje(serie, nombre, btn) {
+      estado.serie = serie;
+      estado.voltajeNominal = nombre;
+
+      document.querySelectorAll('.btn-volt').forEach(b => {
+        b.className = 'btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500 transition-all';
+      });
+
+      btn.className = 'btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-cyan-500/10 border-cyan-400 text-cyan-300 transition-all';
+      calcular();
+    }
+
+    function renderizarBotonesAh() {
+      const base = PRECIOS[estado.tipo].baseAh;
+      document.getElementById('label-ah').innerText = `3. Capacidad (Múltiplos de ${base.toFixed(1)} Ah)`;
+      
+      const contenedor = document.getElementById('botones-ah');
+      contenedor.innerHTML = '';
+
+      [2, 3, 4].forEach(p => {
+        const ah = (p * base).toFixed(1);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.p = p;
+        button.className = `btn-p py-3 rounded-xl border-2 font-bold text-sm transition-all ${
+          p === estado.paralelo && !estado.esManual
+            ? 'bg-cyan-500/10 border-cyan-400 text-cyan-300' 
+            : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500'
+        }`;
+        button.innerHTML = `${ah} Ah <span class="block text-xs font-normal text-slate-400">${p}P</span>`;
+        button.onclick = () => {
+          document.getElementById('input-manual-ah').value = '';
+          document.getElementById('error-msg').classList.add('hidden');
+          estado.esManual = false;
+          seleccionarP(p);
+        };
+        contenedor.appendChild(button);
+      });
+    }
+
+    function seleccionarP(p) {
+      estado.paralelo = p;
+      estado.ah = p * PRECIOS[estado.tipo].baseAh;
+
+      document.querySelectorAll('.btn-p').forEach(btn => {
+        if (parseInt(btn.dataset.p) === p && !estado.esManual) {
+          btn.className = 'btn-p py-3 rounded-xl border-2 font-bold text-sm bg-cyan-500/10 border-cyan-400 text-cyan-300 transition-all';
+        } else {
+          btn.className = 'btn-p py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500 transition-all';
+        }
+      });
+
+      calcular();
+    }
+
+    function handleManualAh(valor) {
+      const errorEl = document.getElementById('error-msg');
+      if (!valor || valor.trim() === '') {
+        errorEl.classList.add('hidden');
+        seleccionarP(2);
+        return;
+      }
+
+      const parsed = parseFloat(valor.replace(',', '.'));
+      const base = PRECIOS[estado.tipo].baseAh;
+      const pCalculado = parsed / base;
+      const esMultiplo = Math.abs(pCalculado - Math.round(pCalculado)) < 0.001;
+
+      if (!isNaN(parsed) && esMultiplo && pCalculado >= 1) {
+        errorEl.classList.add('hidden');
+        estado.esManual = true;
+        estado.paralelo = Math.round(pCalculado);
+        estado.ah = parsed;
+
+        document.querySelectorAll('.btn-p').forEach(btn => {
+          btn.className = 'btn-p py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500 transition-all';
+        });
+
+        calcular();
+      } else {
+        errorEl.textContent = `Debe ser múltiplo de ${base.toFixed(1)} Ah y mayor o igual a 1P.`;
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    function calcular() {
+      const info = PRECIOS[estado.tipo];
+      const totalCeldas = estado.serie * estado.paralelo;
+
+      const ventaCeldas = totalCeldas * info.venta;
+      const costoCeldas = totalCeldas * info.costo;
+
+      const ventaTotal = ventaCeldas + BMS.venta;
+      const costoTotal = costoCeldas + BMS.costo;
+      const ganancia = ventaTotal - costoTotal;
+      const margen = ((ganancia / ventaTotal) * 100).toFixed(1);
+
+      // Resumen superior
+      document.getElementById('res-pack').innerText = `${estado.voltajeNominal} ${estado.ah}Ah`;
+      document.getElementById('res-config').innerText = `${estado.serie}S ${estado.paralelo}P`;
+      document.getElementById('res-celdas').innerText = `${totalCeldas} celdas`;
+
+      // 1. Cliente
+      document.getElementById('sub-cliente').innerText = `Celdas: $${ventaCeldas.toLocaleString()} + BMS: $${BMS.venta}`;
+      document.getElementById('val-cliente').innerText = `$${ventaTotal.toLocaleString()}`;
+
+      // 2. Costo
+      document.getElementById('sub-costo').innerText = `Celdas: $${costoCeldas.toLocaleString()} + BMS: $${BMS.costo}`;
+      document.getElementById('val-costo').innerText = `$${costoTotal.toLocaleString()}`;
+
+      // 3. Ganancia
+      document.getElementById('val-ganancia').innerText = `$${ganancia.toLocaleString()}`;
+      document.getElementById('val-margen').innerText = `Margen sobre venta: ${margen}%`;
+    }
+
+    // Inicializar
+    renderizarBotonesAh();
+    seleccionarP(2);
+  </script>
+</body>
+</html>
