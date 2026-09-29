@@ -48,12 +48,15 @@
     <!-- 2. Voltaje (Serie S) -->
     <div class="space-y-2">
       <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">2. Voltaje del Pack</label>
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button type="button" onclick="setVoltaje(10, '36V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-cyan-500/10 border-cyan-400 text-cyan-300">
           36V <span class="block text-xs font-normal text-slate-400">10S</span>
         </button>
         <button type="button" onclick="setVoltaje(13, '48V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500">
           48V <span class="block text-xs font-normal text-slate-400">13S</span>
+        </button>
+        <button type="button" onclick="setVoltaje(16, '60V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500">
+          60V <span class="block text-xs font-normal text-slate-400">16S</span>
         </button>
         <button type="button" onclick="setVoltaje(20, '72V', this)" class="btn-volt py-3 rounded-xl border-2 font-bold text-sm bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500">
           72V <span class="block text-xs font-normal text-slate-400">20S</span>
