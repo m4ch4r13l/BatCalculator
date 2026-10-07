@@ -102,27 +102,27 @@
         <div class="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl flex items-center justify-between">
           <div>
             <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block">1. Precio Total al Cliente</span>
-            <span id="sub-cliente" class="text-xs text-slate-400 block mt-0.5">Celdas s/IVA: $1,600 | Celdas c/IVA: $1,860 | BMS: $696</span>
+            <span id="sub-cliente" class="text-xs text-slate-400 block mt-0.5">Celdas s/IVA: $1,600 | Celdas c/IVA: $1,860 | BMS: $696 | Cargador: $2,320 | M.O. (30%): $405.00</span>
           </div>
-          <div id="val-cliente" class="text-2xl font-black text-emerald-400">$2,556.00</div>
+          <div id="val-cliente" class="text-2xl font-black text-emerald-400">$5,281.00</div>
         </div>
 
         <!-- 2. Costo interno -->
         <div class="p-4 bg-rose-950/20 border border-rose-500/30 rounded-xl flex items-center justify-between">
           <div>
             <span class="text-xs font-bold text-rose-400 uppercase tracking-wider block">2. Costo Total para Nosotros</span>
-            <span id="sub-costo" class="text-xs text-slate-400 block mt-0.5">Celdas: $900 + BMS: $300</span>
+            <span id="sub-costo" class="text-xs text-slate-400 block mt-0.5">Celdas: $900 + BMS: $300 + Cargador: $1,500</span>
           </div>
-          <div id="val-costo" class="text-xl font-bold text-rose-300">$1,200</div>
+          <div id="val-costo" class="text-xl font-bold text-rose-300">$2,700</div>
         </div>
 
         <!-- 3. Beneficio -->
         <div class="p-4 bg-amber-950/20 border border-amber-500/30 rounded-xl flex items-center justify-between">
           <div>
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block">3. Beneficio Estimado</span>
-            <span id="val-margen" class="text-xs text-amber-300/80 block mt-0.5">Margen sobre venta: 53.1%</span>
+            <span id="val-margen" class="text-xs text-amber-300/80 block mt-0.5">Margen sobre venta: 48.9%</span>
           </div>
-          <div id="val-ganancia" class="text-2xl font-black text-amber-400">$1,356.00</div>
+          <div id="val-ganancia" class="text-2xl font-black text-amber-400">$2,581.00</div>
         </div>
       </div>
 
@@ -138,6 +138,7 @@
     };
 
     const BMS = { venta: 696, costo: 300 };
+    const CARGADOR = { venta: 2320, costo: 1500 };
 
     let estado = {
       tipo: "21700",
@@ -248,11 +249,33 @@
 
       const ventaCeldasSinIVA = totalCeldas * info.ventaSinIVA;
       const ventaCeldasConIVA = totalCeldas * info.ventaConIVA;
-      
       const costoCeldas = totalCeldas * info.costo;
 
-      const ventaTotal = ventaCeldasConIVA + BMS.venta;
-      const costoTotal = costoCeldas + BMS.costo;
+      let costoMaterialesExtras = 0;
+      let textoCostoInterno = `Celdas: $${costoCeldas.toLocaleString('es-MX')} + BMS: $${BMS.costo} + Cargador: $${CARGADOR.costo}`;
+
+      if (estado.tipo === "21700") {
+        const cmNiquel = totalCeldas * 1.5;
+        const costoNiquel = cmNiquel * 1.5;
+        const holders1x3 = Math.ceil(totalCeldas / 3);
+        const costoHolders = holders1x3 * 3.8;
+
+        costoMaterialesExtras = costoNiquel + costoHolders;
+        textoCostoInterno = `Celdas: $${costoCeldas.toLocaleString('es-MX')} + BMS: $${BMS.costo} + Cargador: $${CARGADOR.costo} | Níquel (${cmNiquel.toFixed(0)}cm): $${costoNiquel.toFixed(2)} | Holders (${holders1x3}pzs): $${costoHolders.toFixed(2)}`;
+      }
+
+      // Costo de producción base (excluyendo el cargador para el cálculo de mano de obra)
+      const costoProduccionBase = costoCeldas + BMS.costo + costoMaterialesExtras;
+      
+      // Mano de obra (30% sobre el costo de producción base)
+      const manoDeObra = costoProduccionBase * 0.30;
+
+      // Costo Total para Nosotros (Producción + Cargador)
+      const costoTotal = costoProduccionBase + CARGADOR.costo;
+      
+      // Precio Total al Cliente = Celdas c/IVA + BMS + Cargador + Mano de Obra
+      const ventaTotal = ventaCeldasConIVA + BMS.venta + CARGADOR.venta + manoDeObra;
+
       const ganancia = ventaTotal - costoTotal;
       const margen = ((ganancia / ventaTotal) * 100).toFixed(1);
 
@@ -261,12 +284,12 @@
       document.getElementById('res-config').innerText = `${estado.serie}S ${estado.paralelo}P`;
       document.getElementById('res-celdas').innerText = `${totalCeldas} celdas`;
 
-      // 1. Cliente (Celdas s/IVA, c/IVA y BMS)
-      document.getElementById('sub-cliente').innerText = `Celdas s/IVA: $${ventaCeldasSinIVA.toLocaleString('es-MX')} | Celdas c/IVA: $${ventaCeldasConIVA.toLocaleString('es-MX')} | BMS: $${BMS.venta}`;
+      // 1. Cliente
+      document.getElementById('sub-cliente').innerText = `Celdas s/IVA: $${ventaCeldasSinIVA.toLocaleString('es-MX')} | Celdas c/IVA: $${ventaCeldasConIVA.toLocaleString('es-MX')} | BMS: $${BMS.venta} | Cargador: $${CARGADOR.venta} | M.O. (30%): $${manoDeObra.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
       document.getElementById('val-cliente').innerText = `$${ventaTotal.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-      // 2. Costo
-      document.getElementById('sub-costo').innerText = `Celdas: $${costoCeldas.toLocaleString('es-MX')} + BMS: $${BMS.costo}`;
+      // 2. Costo interno
+      document.getElementById('sub-costo').innerText = textoCostoInterno;
       document.getElementById('val-costo').innerText = `$${costoTotal.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
       // 3. Ganancia
