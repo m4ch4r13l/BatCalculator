@@ -59,7 +59,7 @@
         <label class="relative flex flex-col p-4 bg-slate-800/60 border-2 border-slate-700 rounded-xl cursor-pointer hover:border-cyan-500 transition-all has-[:checked]:border-cyan-400 has-[:checked]:bg-cyan-950/20">
           <input type="radio" name="celda" value="18650" class="peer sr-only" onchange="actualizarCelda()">
           <span class="font-bold text-lg text-white">18650 (2.5 Ah)</span>
-          <span class="text-xs text-slate-400 mt-1">Venta c/IVA: $70 | s/IVA: $60 | Costo: $25</span>
+          <span class="text-xs text-slate-400 mt-1">Venta c/IVA: $58.00 | s/IVA: $50 | Costo: $25</span>
         </label>
       </div>
     </div>
@@ -165,7 +165,7 @@
     // Variables base con precios s/IVA, c/IVA (16% sobre s/IVA) y costo interno
     const PRECIOS = {
       "21700": { ventaSinIVA: 90, ventaConIVA: 90 * 1.16, costo: 45, baseAh: 4.0 },
-      "18650": { ventaSinIVA: 60, ventaConIVA: 70, costo: 25, baseAh: 2.5 }
+      "18650": { ventaSinIVA: 50, ventaConIVA: 50 * 1.16, costo: 25, baseAh: 2.5 }
     };
 
     const BMS = { costo: 300 };
@@ -325,10 +325,17 @@
       if (estado.tipo === "21700") {
         const cmNiquel = totalCeldas * 1.5;
         costoNiquel = cmNiquel * 1.5;
-        const holders1x3 = Math.ceil(totalCeldas / 3);
-        costoHolders = holders1x3 * 3.8;
+        // Total holders 21700 (1x3p) * 2 para arriba y abajo
+        const totalHolders21700 = Math.ceil(totalCeldas / 3) * 2;
+        costoHolders = totalHolders21700 * 3.8;
 
-        textoCostoInterno += ` | Níquel (${cmNiquel.toFixed(0)}cm): $${costoNiquel.toFixed(2)} | Holders (${holders1x3}pzs): $${costoHolders.toFixed(2)}`;
+        textoCostoInterno += ` | Níquel (${cmNiquel.toFixed(0)}cm): $${costoNiquel.toFixed(2)} | Holders 1x3 (${totalHolders21700}pzs): $${costoHolders.toFixed(2)}`;
+      } else if (estado.tipo === "18650") {
+        // Total holders 18650 (1x2p) * 2 para arriba y abajo
+        const totalHolders18650 = Math.ceil(totalCeldas / 2) * 2;
+        costoHolders = totalHolders18650 * 2.52;
+
+        textoCostoInterno += ` | Holders 1x2 (${totalHolders18650}pzs): $${costoHolders.toFixed(2)}`;
       }
 
       if (incluirCargador) {
